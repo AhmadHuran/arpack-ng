@@ -6,7 +6,8 @@ use std::f64::EPSILON;
 #[derive(Debug)]
 pub enum Error {
     NonSquare,
-    Other,
+    IllegalParameters(String),
+    Other(i32),
 }
 
 pub trait Arpack {
@@ -69,8 +70,30 @@ impl Arpack for Array2<Complex64> {
                     .assign(&self.dot(&v));
             }
         }
-        if info < 0 {
-            return Err(Error::Other);
+        match info {
+            0 | 1 | 2 => {}
+            -1 => return Err(Error::IllegalParameters("N must be positive.".to_string())),
+            -2 => {
+                return Err(Error::IllegalParameters(
+                    "NEV must be positive.".to_string(),
+                ))
+            }
+            -3 => {
+                return Err(Error::IllegalParameters(
+                    "NCV-NEV >= 2 and less than or equal to N.".to_string(),
+                ))
+            }
+            -4 => {
+                return Err(Error::IllegalParameters(
+                    "Maximum iterations must be greater than 0.".to_string(),
+                ))
+            }
+            -5 => {
+                return Err(Error::IllegalParameters(
+                    "Maximum iterations must be greater than 0.".to_string(),
+                ))
+            }
+            i => return Err(Error::Other(i)),
         }
 
         let select = vec![false; ncv];
