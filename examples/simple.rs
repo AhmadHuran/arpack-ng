@@ -3,6 +3,10 @@ use ndarray::prelude::*;
 
 fn main() -> Result<(), Error> {
     let m = Array2::ones((200, 200));
-    println!("{}", m.eigenvalues(1, 200, 10000)?);
+    let (val, vec) = m.eigenvectors(2, 50, 100)?;
+    println!("{:?} {:?}", val.shape(), vec.shape());
+    for i in 0..val.len() {
+        println!("{} => {:?}", val[i], vec.slice(s![.., i]));
+    }
     Ok(())
 }
