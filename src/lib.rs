@@ -225,7 +225,7 @@ impl Arpack for Array2<Complex64> {
         let mut workev: Array1<Complex64> = Array1::zeros(2 * ncv);
         unsafe {
             zneupd_c(
-                false as i32,
+                true as i32,
                 "A".as_ptr() as *const i8,
                 select.as_ptr() as *const i32,
                 d.as_mut_ptr() as *mut __BindgenComplex<f64>,
