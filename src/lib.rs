@@ -256,7 +256,7 @@ impl Arpack for Array2<Complex64> {
 }
 
 pub fn eigenvectors<F>(
-    av: F,
+    mut av: F,
     n: usize,
     nev: usize,
     ncv: usize,
