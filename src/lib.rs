@@ -263,7 +263,7 @@ pub fn eigenvectors<F>(
     maxiter: usize,
 ) -> Result<(Array1<Complex64>, Array2<Complex64>), Error>
 where
-    F: Fn(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
+    F: FnMut(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
 {
     let mut ido = 0;
     let mut resid: Array1<Complex64> = Array1::zeros(n);
