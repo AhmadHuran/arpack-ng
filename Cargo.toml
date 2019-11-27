@@ -14,3 +14,4 @@ num-traits = "0.2.9"
 blas-src = { version = "0.4", features = ["openblas"] }
 lapack-src = { version = "0.4", features = ["openblas"] }
 openblas-src = { version = "0.7", features = ["system", "cblas"] }
+lazy_static = "1.4.0"
