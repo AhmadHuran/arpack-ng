@@ -109,7 +109,7 @@ fn arpack_c64<F>(
 where
     F: FnMut(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
 {
-    let _ = MUTEX.lock().unwrap();
+    let g = MUTEX.lock().unwrap();
     let mut ido = 0;
     let mut resid: Array1<Complex64> = Array1::zeros(n);
     let mut v: Array2<Complex64> = Array2::zeros((n, ncv));
@@ -181,7 +181,7 @@ where
         i => return Err(Error::Other(i)),
     }
 
-    let select = vec![false; ncv];
+    let select = vec![false as i32; ncv];
     let mut d: Array1<Complex64> = Array1::zeros(nev + 1);
     let mut z: Array2<Complex64> = Array2::zeros((n, nev));
     let mut workev: Array1<Complex64> = Array1::zeros(2 * ncv);
@@ -189,7 +189,7 @@ where
         zneupd_c(
             vectors as i32,
             "A".as_ptr() as *const i8,
-            select.as_ptr() as *const i32,
+            select.as_ptr(),
             d.as_mut_ptr() as *mut __BindgenComplex<f64>,
             z.as_mut_ptr() as *mut __BindgenComplex<f64>,
             n as i32,
@@ -213,5 +213,6 @@ where
             &mut info,
         );
     }
+    drop(g);
     Ok((d.slice(s![0..nev]).to_owned(), z))
 }
