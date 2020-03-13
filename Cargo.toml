@@ -11,7 +11,7 @@ arpack-ng-sys = { git = "https://gitlab.com/solidtux-rust/arpack-ng-sys.git" }
 num-complex = "0.2"
 ndarray = "0.13"
 num-traits = "0.2"
-blas-src = { version = "0.4", features = ["openblas"] }
-lapack-src = { version = "0.4", features = ["openblas"] }
-openblas-src = { version = "0.7", features = ["system", "cblas"] }
+blas-src = { version = "0.6", features = ["openblas"] }
+lapack-src = { version = "0.6", features = ["openblas"] }
+openblas-src = { version = "0.9", features = ["system", "cblas"] }
 lazy_static = "1.4"
