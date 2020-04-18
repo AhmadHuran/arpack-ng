@@ -1,5 +1,5 @@
 use arpack_ng::*;
-use ndarray::prelude::*;
+use ndarray::{s, prelude::*};
 
 fn main() -> Result<(), Error> {
     let m = Array2::ones((200, 200));

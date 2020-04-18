@@ -1,6 +1,6 @@
 use arpack_ng_sys::*;
 use lazy_static::lazy_static;
-use ndarray::prelude::*;
+use ndarray::{prelude::*, s};
 use num_complex::Complex64;
 use std::{f64::EPSILON, sync::Mutex};
 
