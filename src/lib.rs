@@ -2,7 +2,7 @@ use arpack_ng_sys::*;
 use lazy_static::lazy_static;
 use ndarray::prelude::*;
 use num_complex::Complex64;
-use std::{f64::EPSILON, sync::Mutex};
+use std::{f64::EPSILON, sync::Mutex, fmt};
 
 lazy_static! {
     static ref MUTEX: Mutex<()> = Mutex::new(());
@@ -14,6 +14,18 @@ pub enum Error {
     IllegalParameters(String),
     Other(i32),
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::NonSquare => f.write_str("Non square matrix."),
+            Error::IllegalParameters(s) => write!(f, "Invalid parameters: {}", s),
+            Error::Other(i) => write!(f, "Arpack error (code {}", i)
+        }
+    }
+}
+
+impl std::error::Error for Error {}
 
 pub trait Arpack {
     type Result;
