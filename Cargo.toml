@@ -17,7 +17,7 @@ accelerate = ["blas-src/accelerate", "lapack-src/accelerate"]
 
 [dependencies]
 arpack-ng-sys = "0.1.3-alpha.0"
-num-complex = "0.3"
+num-complex = "0.2"
 ndarray = "0.13"
 num-traits = "0.2"
 blas-src = "0.6"
