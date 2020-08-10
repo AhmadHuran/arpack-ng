@@ -28,7 +28,7 @@ impl fmt::Display for Error {
 #[derive(Debug, Clone)]
 pub enum Which {
     LargestMagnitude,
-    SmallestManitude,
+    SmallestMagnitude,
     LargestRealPart,
     SmallestRealPart,
     LargestImaginaryPart,
