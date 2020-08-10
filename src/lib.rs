@@ -2,7 +2,7 @@ use arpack_ng_sys::*;
 use lazy_static::lazy_static;
 use ndarray::prelude::*;
 use num_complex::Complex64;
-use std::{f64::EPSILON, sync::Mutex, fmt};
+use std::{f64::EPSILON, fmt, sync::Mutex};
 
 lazy_static! {
     static ref MUTEX: Mutex<()> = Mutex::new(());
@@ -20,7 +20,30 @@ impl fmt::Display for Error {
         match self {
             Error::NonSquare => f.write_str("Non square matrix."),
             Error::IllegalParameters(s) => write!(f, "Invalid parameters: {}", s),
-            Error::Other(i) => write!(f, "Arpack error (code {}", i)
+            Error::Other(i) => write!(f, "Arpack error (code {}", i),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Which {
+    LargestMagnitude,
+    SmallestManitude,
+    LargestRealPart,
+    SmallestRealPart,
+    LargestImaginaryPart,
+    SmallestImaginaryPart,
+}
+
+impl Which {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Which::LargestMagnitude => "LM",
+            Which::SmallestManitude => "SM",
+            Which::LargestRealPart => "LR",
+            Which::SmallestRealPart => "SR",
+            Which::LargestImaginaryPart => "LI",
+            Which::SmallestImaginaryPart => "SI",
         }
     }
 }
@@ -31,9 +54,16 @@ pub trait Arpack {
     type Result;
     type ResultVec;
 
-    fn eigenvalues(&self, nev: usize, ncv: usize, maxiter: usize) -> Result<Self::Result, Error>;
+    fn eigenvalues(
+        &self,
+        which: &Which,
+        nev: usize,
+        ncv: usize,
+        maxiter: usize,
+    ) -> Result<Self::Result, Error>;
     fn eigenvectors(
         &self,
+        which: &Which,
         nev: usize,
         ncv: usize,
         maxiter: usize,
@@ -46,7 +76,13 @@ impl Arpack for Array2<Complex64> {
     type Result = Array1<Complex64>;
     type ResultVec = (Array1<Complex64>, Array2<Complex64>);
 
-    fn eigenvalues(&self, nev: usize, ncv: usize, maxiter: usize) -> Result<Self::Result, Error> {
+    fn eigenvalues(
+        &self,
+        which: &Which,
+        nev: usize,
+        ncv: usize,
+        maxiter: usize,
+    ) -> Result<Self::Result, Error> {
         if !self.is_square() {
             return Err(Error::NonSquare);
         }
@@ -54,6 +90,7 @@ impl Arpack for Array2<Complex64> {
         let (val, _) = arpack_c64(
             |v1, mut v2| v2.assign(&self.dot(&v1)),
             n,
+            which.as_str(),
             nev,
             ncv,
             maxiter,
@@ -64,6 +101,7 @@ impl Arpack for Array2<Complex64> {
 
     fn eigenvectors(
         &self,
+        which: &Which,
         nev: usize,
         ncv: usize,
         maxiter: usize,
@@ -75,6 +113,7 @@ impl Arpack for Array2<Complex64> {
         arpack_c64(
             |v1, mut v2| v2.assign(&self.dot(&v1)),
             n,
+            which.as_str(),
             nev,
             ncv,
             maxiter,
@@ -86,6 +125,7 @@ impl Arpack for Array2<Complex64> {
 pub fn eigenvalues<F>(
     av: F,
     n: usize,
+    which: &Which,
     nev: usize,
     ncv: usize,
     maxiter: usize,
@@ -93,13 +133,14 @@ pub fn eigenvalues<F>(
 where
     F: FnMut(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
 {
-    let (res, _) = arpack_c64(av, n, nev, ncv, maxiter, true)?;
+    let (res, _) = arpack_c64(av, n, which.as_str(), nev, ncv, maxiter, true)?;
     Ok(res)
 }
 
 pub fn eigenvectors<F>(
     av: F,
     n: usize,
+    which: &Which,
     nev: usize,
     ncv: usize,
     maxiter: usize,
@@ -107,12 +148,13 @@ pub fn eigenvectors<F>(
 where
     F: FnMut(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
 {
-    arpack_c64(av, n, nev, ncv, maxiter, true)
+    arpack_c64(av, n, which.as_str(), nev, ncv, maxiter, true)
 }
 
 fn arpack_c64<F>(
     mut av: F,
     n: usize,
+    which: &str,
     nev: usize,
     ncv: usize,
     maxiter: usize,
@@ -141,7 +183,7 @@ where
                 &mut ido,
                 "I".as_ptr() as *const i8,
                 n as i32,
-                "LR".as_ptr() as *const i8,
+                which.as_ptr() as *const i8,
                 nev as i32,
                 EPSILON,
                 resid.as_mut_ptr() as *mut __BindgenComplex<f64>,

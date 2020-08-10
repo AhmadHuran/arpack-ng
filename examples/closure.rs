@@ -1,4 +1,4 @@
-use arpack_ng::{self, Error};
+use arpack_ng::{self, Error, Which};
 
 const N: usize = 100;
 
@@ -10,6 +10,7 @@ fn main() -> Result<(), Error> {
             }
         },
         N,
+        &Which::LargestRealPart,
         2,
         10,
         100,
