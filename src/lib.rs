@@ -39,7 +39,7 @@ impl Which {
     fn as_str(&self) -> &'static str {
         match self {
             Which::LargestMagnitude => "LM",
-            Which::SmallestManitude => "SM",
+            Which::SmallestMagnitude => "SM",
             Which::LargestRealPart => "LR",
             Which::SmallestRealPart => "SR",
             Which::LargestImaginaryPart => "LI",
