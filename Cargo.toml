@@ -1,6 +1,6 @@
 [package]
 name = "arpack-ng"
-version = "0.1.1-alpha.3"
+version = "0.1.1-alpha.4"
 authors = ["Daniel Hauck <mail@dhauck.eu>"]
 edition = "2018"
 description = "Save interface to arpack-ng-sys"
