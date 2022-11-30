@@ -1,6 +1,6 @@
 # arpack-ng
 
-This package provides Rust bindings for [https://github.com/opencollab/arpack-ng](arpack-ng), a library solve large eigenvalue problems.
+This package provides Rust bindings for [arpack-ng](https://github.com/opencollab/arpack-ng), a library solve large eigenvalue problems.
 
 Currently only the functionality of `zneupd` is exposed.
 This means that this library can be used to calculate eigenvalues and vectors using **I**mplicitely **R**estarted **A**rnoldi **M**ethod.
