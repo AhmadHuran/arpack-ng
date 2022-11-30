@@ -1,24 +1,25 @@
 [package]
-name = "arpack-ng"
-version = "0.1.1-alpha.4"
 authors = ["Daniel Hauck <mail@dhauck.eu>"]
-edition = "2018"
 description = "Save interface to arpack-ng-sys"
+edition = "2018"
 homepage = "https://gitlab.com/solidtux-rust/arpack-ng"
 license = "BSD-3-Clause"
+name = "arpack-ng"
+version = "0.1.1-alpha.4"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = ["static"]
+default = ["static", "ndarray"]
 static = ["arpack-ng-sys/static"]
 system = ["arpack-ng-sys/system"]
 
 [dependencies]
 arpack-ng-sys = "0.1.3-alpha.1"
 #arpack-ng-sys = { path = "../arpack-ng-sys" }
-num-complex = "0.2"
-ndarray = "0.13"
-num-traits = "0.2"
 lazy_static = "1.4"
+nalgebra = {version = "0.31.4", optional = true}
+ndarray = {version = "0.15.6", optional = true}
+num-complex = "0.4.2"
+num-traits = "0.2"
 
 [dev-dependencies]
