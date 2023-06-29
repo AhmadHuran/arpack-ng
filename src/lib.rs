@@ -35,6 +35,8 @@ impl fmt::Display for Error {
 
 #[derive(Debug, Clone)]
 pub enum Which {
+    LargestAlgebraic,
+    SmallestAlgebraic,
     LargestMagnitude,
     SmallestMagnitude,
     LargestRealPart,
@@ -46,6 +48,8 @@ pub enum Which {
 impl Which {
     fn as_str(&self) -> &'static str {
         match self {
+            Which::LargestAlgebraic => "LA",
+            Which::SmallestAlgebraic => "SA",
             Which::LargestMagnitude => "LM",
             Which::SmallestMagnitude => "SM",
             Which::LargestRealPart => "LR",
