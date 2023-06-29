@@ -1,60 +1,11 @@
+
 use std::f64::EPSILON;
+use std::os::raw::c_double;
 
 use arpack_ng_sys::*;
 use ndarray::prelude::*;
-use num_complex::Complex64;
 
-use crate::{Arpack, Error, Which, MUTEX, ZERO};
-
-impl Arpack for Array2<Complex64> {
-    type Result = Array1<Complex64>;
-    type ResultVec = (Array1<Complex64>, Array2<Complex64>);
-
-    fn eigenvalues(
-        &self,
-        which: &Which,
-        nev: usize,
-        ncv: usize,
-        maxiter: usize,
-    ) -> Result<Self::Result, Error> {
-        if !self.is_square() {
-            return Err(Error::NonSquare);
-        }
-        let n = self.dim().0;
-        let (val, _) = arpack_c64(
-            |v1, mut v2| v2.assign(&self.dot(&v1)),
-            n,
-            which.as_str(),
-            nev,
-            ncv,
-            maxiter,
-            true,
-        )?;
-        Ok(val)
-    }
-
-    fn eigenvectors(
-        &self,
-        which: &Which,
-        nev: usize,
-        ncv: usize,
-        maxiter: usize,
-    ) -> Result<Self::ResultVec, Error> {
-        if !self.is_square() {
-            return Err(Error::NonSquare);
-        }
-        let n = self.dim().0;
-        arpack_c64(
-            |v1, mut v2| v2.assign(&self.dot(&v1)),
-            n,
-            which.as_str(),
-            nev,
-            ncv,
-            maxiter,
-            true,
-        )
-    }
-}
+use crate::{Error, Which, MUTEX};
 
 pub fn eigenvalues<F>(
     av: F,
@@ -63,11 +14,11 @@ pub fn eigenvalues<F>(
     nev: usize,
     ncv: usize,
     maxiter: usize,
-) -> Result<Array1<Complex64>, Error>
+) -> Result<Array1<f64>, Error>
 where
-    F: FnMut(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
+    F: FnMut(ArrayView1<f64>, ArrayViewMut1<f64>),
 {
-    let (res, _) = arpack_c64(av, n, which.as_str(), nev, ncv, maxiter, true)?;
+    let (res, _) = arpack_f64(av, n, which.as_str(), nev, ncv, maxiter, true)?;
     Ok(res)
 }
 
@@ -78,14 +29,14 @@ pub fn eigenvectors<F>(
     nev: usize,
     ncv: usize,
     maxiter: usize,
-) -> Result<(Array1<Complex64>, Array2<Complex64>), Error>
+) -> Result<(Array1<f64>, Array2<f64>), Error>
 where
-    F: FnMut(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
+    F: FnMut(ArrayView1<f64>, ArrayViewMut1<f64>),
 {
-    arpack_c64(av, n, which.as_str(), nev, ncv, maxiter, true)
+    arpack_f64(av, n, which.as_str(), nev, ncv, maxiter, true)
 }
 
-fn arpack_c64<F>(
+fn arpack_f64<F>(
     mut av: F,
     n: usize,
     which: &str,
@@ -93,14 +44,14 @@ fn arpack_c64<F>(
     ncv: usize,
     maxiter: usize,
     vectors: bool,
-) -> Result<(Array1<Complex64>, Array2<Complex64>), Error>
+) -> Result<(Array1<f64>, Array2<f64>), Error>
 where
-    F: FnMut(ArrayView1<Complex64>, ArrayViewMut1<Complex64>),
+    F: FnMut(ArrayView1<f64>, ArrayViewMut1<f64>),
 {
     let g = MUTEX.lock().unwrap();
     let mut ido = 0;
-    let mut resid: Array1<Complex64> = Array1::zeros(n);
-    let mut v: Array2<Complex64> = Array2::zeros((n, ncv));
+    let mut resid: Array1<f64> = Array1::zeros(n);
+    let mut v: Array2<f64> = Array2::zeros((n, ncv));
     let mut iparam = [0; 11];
     iparam[0] = 1;
     iparam[2] = maxiter as i32;
@@ -108,28 +59,26 @@ where
     let mut ipntr = [0; 14];
     let mut workd = Array1::zeros(3 * n);
     let lworkl = 3 * ncv.pow(2) + 6 * ncv;
-    let mut workl: Array1<Complex64> = Array1::zeros(lworkl);
-    let mut rwork = vec![0.; ncv];
+    let mut workl: Array1<f64> = Array1::zeros(lworkl);
     let mut info = 0;
     while ido != 99 {
         unsafe {
-            znaupd_c(
+            dsaupd_c(
                 &mut ido,
                 "I".as_ptr() as *const i8,
                 n as i32,
                 which.as_ptr() as *const i8,
                 nev as i32,
                 EPSILON,
-                resid.as_mut_ptr() as *mut __BindgenComplex<f64>,
+                resid.as_mut_ptr() as *mut c_double,
                 ncv as i32,
-                v.as_mut_ptr() as *mut __BindgenComplex<f64>,
+                v.as_mut_ptr() as *mut c_double,
                 n as i32,
                 iparam.as_mut_ptr(),
                 ipntr.as_mut_ptr(),
-                workd.as_mut_ptr() as *mut __BindgenComplex<f64>,
-                workl.as_mut_ptr() as *mut __BindgenComplex<f64>,
+                workd.as_mut_ptr() as *mut c_double,
+                workl.as_mut_ptr() as *mut c_double,
                 lworkl as i32,
-                rwork.as_mut_ptr(),
                 &mut info,
             );
         }
@@ -170,37 +119,35 @@ where
     }
 
     let select = vec![false as i32; ncv];
-    let mut d: Array1<Complex64> = Array1::zeros(nev + 1);
-    let mut z: Array2<Complex64> = Array2::zeros((n, nev));
-    let mut workev: Array1<Complex64> = Array1::zeros(2 * ncv);
+    let mut d: Array1<f64> = Array1::zeros(nev + 1);
+    let mut z: Array2<f64> = Array2::zeros((n, nev));
     unsafe {
-        zneupd_c(
+        dseupd_c(
             vectors as i32,
             "A".as_ptr() as *const i8,
             select.as_ptr(),
-            d.as_mut_ptr() as *mut __BindgenComplex<f64>,
-            z.as_mut_ptr() as *mut __BindgenComplex<f64>,
+            d.as_mut_ptr() as *mut c_double,
+            z.as_mut_ptr() as *mut c_double,
             n as i32,
-            ZERO,
-            workev.as_mut_ptr() as *mut __BindgenComplex<f64>,
+            0.0,
             "I".as_ptr() as *const i8,
             n as i32,
-            "LR".as_ptr() as *const i8,
+            which.as_ptr() as *const i8,
             nev as i32,
             EPSILON,
-            resid.as_mut_ptr() as *mut __BindgenComplex<f64>,
+            resid.as_mut_ptr() as *mut c_double,
             ncv as i32,
-            v.as_mut_ptr() as *mut __BindgenComplex<f64>,
+            v.as_mut_ptr() as *mut c_double,
             n as i32,
             iparam.as_mut_ptr(),
             ipntr.as_mut_ptr(),
-            workd.as_mut_ptr() as *mut __BindgenComplex<f64>,
-            workl.as_mut_ptr() as *mut __BindgenComplex<f64>,
+            workd.as_mut_ptr() as *mut c_double,
+            workl.as_mut_ptr() as *mut c_double,
             lworkl as i32,
-            rwork.as_mut_ptr(),
             &mut info,
         );
     }
     drop(g);
     Ok((d.slice(s![0..nev]).to_owned(), z))
 }
+
