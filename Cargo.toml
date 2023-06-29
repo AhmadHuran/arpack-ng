@@ -14,8 +14,7 @@ static = ["arpack-ng-sys/static"]
 system = ["arpack-ng-sys/system"]
 
 [dependencies]
-arpack-ng-sys = "0.2.0"
-#arpack-ng-sys = { path = "../arpack-ng-sys" }
+arpack-ng-sys = { git = "https://github.com/AhmadHuran/arpack-ng-sys.git", version = "0.2.1-alpha.0" }
 lazy_static = "1.4"
 nalgebra = {version = "0.31.4", optional = true}
 ndarray = {version = "0.15.6", optional = true}
